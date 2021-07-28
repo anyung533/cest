@@ -3,7 +3,7 @@
 
 cest入口：首页-领京豆-升级赚京豆
 21 9 * * * https://raw.githubusercontent.com/smiek2221/scripts/master/gua_MMdou.js, tag=MM领京豆, enabled=true
-
+cron 1 7,12,19 * * * jd_MMdou.js
 */
 
 const $ = new Env('MM领京豆');
