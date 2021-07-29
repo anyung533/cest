@@ -1,5 +1,5 @@
 /*
-corn 0 12 * * *
+corn 0 12,16 * * * 
 */
 
 const $ = new Env('柠檬大富翁ChinaJoy');
