@@ -131,8 +131,8 @@ async function jdPet() {
       $.taskInfo = $.taskInit.result;
 
       await petSport();//遛弯
-      //await slaveHelp();//助力好友
-      //await masterHelpInit();//获取助力的信息
+      await slaveHelp();//助力好友
+      await masterHelpInit();//获取助力的信息
       await doTask();//做日常任务
       await feedPetsAgain();//再次投食
       await energyCollect();//收集好感度
@@ -277,7 +277,37 @@ async function masterHelpInit() {
  * shareCode为你要助力的好友的
  * 运行脚本时你自己的shareCode会在控制台输出, 可以将其分享给他人
  */
-
+async function slaveHelp() {
+  //$.log(`\n因1.6日好友助力功能下线。故暂时屏蔽\n`)
+  //return
+  let helpPeoples = '';
+  for (let code of newShareCodes) {
+    console.log(`开始助力京东账号${$.index} - ${$.nickName}的好友: ${code}`);
+    if (!code) continue;
+    let response = await request(arguments.callee.name.toString(), {'shareCode': code});
+    if (response.code === '0' && response.resultCode === '0') {
+      if (response.result.helpStatus === 0) {
+        console.log('已给好友: 【' + response.result.masterNickName + '】助力成功');
+        helpPeoples += response.result.masterNickName + '，';
+      } else if (response.result.helpStatus === 1) {
+        // 您今日已无助力机会
+        console.log(`助力好友${response.result.masterNickName}失败，您今日已无助力机会`);
+        break;
+      } else if (response.result.helpStatus === 2) {
+        //该好友已满5人助力，无需您再次助力
+        console.log(`该好友${response.result.masterNickName}已满5人助力，无需您再次助力`);
+      } else {
+        console.log(`助力其他情况：${JSON.stringify(response)}`);
+      }
+    } else {
+      console.log(`助力好友结果: ${response.message}`);
+    }
+  }
+  if (helpPeoples && helpPeoples.length > 0) {
+    message += `【您助力的好友】${helpPeoples.substr(0, helpPeoples.length - 1)}\n`;
+  }
+}
+// 遛狗, 每天次数上限10次, 随机给狗粮, 每次遛狗结束需调用getSportReward领取奖励, 才能进行下一次遛狗
 async function petSport() {
   console.log('开始遛弯');
   let times = 1
@@ -422,7 +452,49 @@ async function showMsg() {
     $.log(`\n${message}\n`);
   }
 }
-
+function readShareCode() {
+  return new Promise(async resolve => {
+    $.get({url: `https://api.sharecode.ga/api/pet/${randomCount}`, 'timeout': 10000}, (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (data) {
+            console.log(`随机取个${randomCount}码放到您固定的互助码后面(不影响已有固定互助)`)
+            data = JSON.parse(data);
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data);
+      }
+    })
+    await $.wait(10000);
+    resolve()
+  })
+}
+function shareCodesFormat() {
+  return new Promise(async resolve => {
+    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
+    newShareCodes = [];
+    if ($.shareCodesArr[$.index - 1]) {
+      newShareCodes = $.shareCodesArr[$.index - 1].split('@');
+    } else {
+      console.log(`由于您第${$.index}个京东账号未提供shareCode,将采纳本脚本自带的助力码\n`)
+      const tempIndex = $.index > shareCodes.length ? (shareCodes.length - 1) : ($.index - 1);
+      newShareCodes = shareCodes[tempIndex].split('@');
+    }
+    //因好友助力功能下线。故暂时屏蔽
+    const readShareCodeRes = await readShareCode();
+    //const readShareCodeRes = null;
+    if (readShareCodeRes && readShareCodeRes.code === 200) {
+      newShareCodes = [...new Set([...newShareCodes, ...(readShareCodeRes.data || [])])];
+    }
+    console.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify(newShareCodes)}`)
+    resolve();
+  })
 }
 function requireConfig() {
   return new Promise(resolve => {
