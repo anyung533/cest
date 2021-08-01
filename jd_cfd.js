@@ -4,8 +4,8 @@
  * 包含雇佣导游，建议每小时1次
  *
  * 此版本暂定默认帮助HelloWorld，帮助助力池
- * export HELP_HW = true    // 帮助HelloWorld
- * export HELP_POOL = true  // 帮助助力池
+ * export HELP_HW = false    // 帮助HelloWorld
+ * export HELP_POOL = false  // 帮助助力池
  *
  * 使用jd_env_copy.js同步js环境变量到ts
  * 使用jd_ts_test.ts测试环境变量
